@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container" style="max-width: 700px;">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-plus-circle"></i> Créer une nouvelle matière</h3>
+            <p>Définissez les groupes concernés par ce cours</p>
+        </div>
+        
+        <form method="POST" id="createCourseForm">
+            <div class="form-group">
+                <label for="name">Nom de la matière *</label>
+                <input type="text" id="name" name="name" required placeholder="Ex: Marketing Stratégique">
+            </div>
+            
+            <div class="form-group">
+                <label for="code">Code matière *</label>
+                <input type="text" id="code" name="code" required placeholder="Ex: MK401">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-users"></i> Groupes concernés *</label>
+                <div id="groups-container">
+                    <div class="group-item" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Niveau</label>
+                                <select class="niveau-select" required onchange="updateFields(this)">
+                                    <option value="">Sélectionnez</option>
+                                    <option value="PMA">PMA</option>
+                                    <option value="M1">M1</option>
+                                    <option value="M2">M2</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Semestre</label>
+                                <select class="semestre-select" required>
+                                    <option value="">Sélectionnez d'abord le niveau</option>
+                                </select>
+                            </div>
+                            <div class="form-group groupe-field" style="display: none;">
+                                <label>Groupe(s)</label>
+                                <select class="groupe-select" multiple size="3">
+                                    <option value="G1">G1</option>
+                                    <option value="G2">G2</option>
+                                    <option value="G3">G3</option>
+                                    <option value="G4">G4</option>
+                                    <option value="G5">G5</option>
+                                    <option value="G6">G6</option>
+                                </select>
+                                <small>Ctrl+Click pour sélectionner plusieurs groupes</small>
+                            </div>
+                            <div class="form-group filiere-field" style="display: none;">
+                                <label>Filière</label>
+                                <select class="filiere-select">
+                                    <option value="">Sélectionnez</option>
+                                    <option value="Audit">Audit</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button type="button" class="btn-remove-group" style="background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer;" onclick="removeGroup(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline" onclick="addGroup()" style="margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Ajouter un autre groupe
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-calendar-alt"></i> Planification des séances</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre de séances</label>
+                        <input type="number" name="nb_sessions" value="10" min="1" max="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de début</label>
+                        <input type="date" name="start_date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Heure de début</label>
+                        <input type="time" name="start_time" value="08:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Heure de fin</label>
+                        <input type="time" name="end_time" value="10:00" required>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Créer la matière
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+let groupCount = 1;
+
+function updateFields(selectElement) {
+    const niveau = selectElement.value;
+    const groupItem = selectElement.closest('.group-item');
+    const semestreSelect = groupItem.querySelector('.semestre-select');
+    const groupeField = groupItem.querySelector('.groupe-field');
+    const filiereField = groupItem.querySelector('.filiere-field');
+    
+    semestreSelect.innerHTML = '<option value="">Sélectionnez</option>';
+    
+    if (niveau === 'PMA') {
+        semestreSelect.innerHTML += '<option value="S1">S1</option><option value="S2">S2</option>';
+        groupeField.style.display = 'block';
+        filiereField.style.display = 'none';
+    } 
+    else if (niveau === 'M1') {
+        semestreSelect.innerHTML += '<option value="S3">S3</option><option value="S4">S4</option>';
+        groupeField.style.display = 'block';
+        filiereField.style.display = 'none';
+        
+        // Pour S4, on affiche les filières
+        semestreSelect.onchange = function() {
+            if (this.value === 'S4') {
+                filiereField.style.display = 'block';
+                groupeField.style.display = 'none';
+            } else {
+                filiereField.style.display = 'none';
+                groupeField.style.display = 'block';
+            }
+        };
+    } 
+    else if (niveau === 'M2') {
+        semestreSelect.innerHTML += '<option value="S5">S5</option><option value="S6">S6</option>';
+        groupeField.style.display = 'none';
+        filiereField.style.display = 'block';
+    }
+}
+
+function addGroup() {
+    const container = document.getElementById('groups-container');
+    const newGroup = document.createElement('div');
+    newGroup.className = 'group-item';
+    newGroup.style.marginBottom = '15px';
+    newGroup.style.padding = '15px';
+    newGroup.style.background = '#f8f9fa';
+    newGroup.style.borderRadius = '10px';
+    
+    newGroup.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Niveau</label>
+                <select class="niveau-select" required onchange="updateFields(this)">
+                    <option value="">Sélectionnez</option>
+                    <option value="PMA">PMA</option>
+                    <option value="M1">M1</option>
+                    <option value="M2">M2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Semestre</label>
+                <select class="semestre-select" required>
+                    <option value="">Sélectionnez d'abord le niveau</option>
+                </select>
+            </div>
+            <div class="form-group groupe-field" style="display: none;">
+                <label>Groupe(s)</label>
+                <select class="groupe-select" multiple size="3">
+                    <option value="G1">G1</option>
+                    <option value="G2">G2</option>
+                    <option value="G3">G3</option>
+                    <option value="G4">G4</option>
+                    <option value="G5">G5</option>
+                    <option value="G6">G6</option>
+                </select>
+                <small>Ctrl+Click pour sélectionner plusieurs groupes</small>
+            </div>
+            <div class="form-group filiere-field" style="display: none;">
+                <label>Filière</label>
+                <select class="filiere-select">
+                    <option value="">Sélectionnez</option>
+                    <option value="Audit">Audit</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Marketing">Marketing</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn-remove-group" style="background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer;" onclick="removeGroup(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newGroup);
+    groupCount++;
+}
+
+function removeGroup(button) {
+    button.closest('.group-item').remove();
+}
+
+document.getElementById('createCourseForm').onsubmit = function(e) {
+    const groups = [];
+    document.querySelectorAll('.group-item').forEach(item => {
+        const niveau = item.querySelector('.niveau-select').value;
+        const semestre = item.querySelector('.semestre-select').value;
+        const groupeSelect = item.querySelector('.groupe-select');
+        const filiereSelect = item.querySelector('.filiere-select');
+        
+        if (niveau && semestre) {
+            if (groupeSelect && groupeSelect.style.display !== 'none') {
+                // Récupérer tous les groupes sélectionnés
+                const selectedGroups = Array.from(groupeSelect.selectedOptions).map(opt => opt.value);
+                if (selectedGroups.length > 0) {
+                    selectedGroups.forEach(groupe => {
+                        groups.push(`${niveau}|${semestre}|${groupe}|`);
+                    });
+                }
+            } else if (filiereSelect && filiereSelect.style.display !== 'none' && filiereSelect.value) {
+                groups.push(`${niveau}|${semestre}||${filiereSelect.value}`);
+            }
+        }
+    });
+    
+    if (groups.length === 0) {
+        alert('Veuillez sélectionner au moins un groupe');
+        e.preventDefault();
+        return false;
+    }
+    
+    groups.forEach(group => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'groups';
+        input.value = group;
+        this.appendChild(input);
+    });
+};
+
+document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+</script>
+
+<style>
+.btn-remove-group:hover {
+    opacity: 0.8;
+}
+.groupe-select {
+    min-height: 80px;
+}
+</style>
+{% endblock %}

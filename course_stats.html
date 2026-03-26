@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px;">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-plus-circle"></i> Créer une nouvelle matière</h3>
+            <p>Définissez les informations de votre cours</p>
+        </div>
+        
+        <form method="POST" id="createCourseForm">
+            <div class="form-group">
+                <label for="name">Nom de la matière *</label>
+                <input type="text" id="name" name="name" required 
+                       placeholder="Ex: Marketing Stratégique">
+            </div>
+            
+            <div class="form-group">
+                <label for="code">Code matière *</label>
+                <input type="text" id="code" name="code" required 
+                       placeholder="Ex: MK401">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3" 
+                          placeholder="Objectifs du cours, prérequis..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-users"></i> Groupes concernés *</label>
+                <div id="groups-container">
+                    <div class="group-item" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Niveau</label>
+                                <select class="niveau-select" onchange="updateSemestreOptions(this)">
+                                    <option value="">Sélectionnez</option>
+                                    <option value="PMA">PMA</option>
+                                    <option value="M1">M1</option>
+                                    <option value="M2">M2</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Semestre</label>
+                                <select class="semestre-select">
+                                    <option value="">Sélectionnez d'abord le niveau</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="groupe-container-0">
+                                <label>Groupe (si applicable)</label>
+                                <select class="groupe-select">
+                                    <option value="none">Non applicable</option>
+                                    <option value="G1">G1</option>
+                                    <option value="G2">G2</option>
+                                    <option value="G3">G3</option>
+                                    <option value="G4">G4</option>
+                                    <option value="G5">G5</option>
+                                    <option value="G6">G6</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="filiere-container-0" style="display: none;">
+                                <label>Filière</label>
+                                <select class="filiere-select">
+                                    <option value="none">Non applicable</option>
+                                    <option value="Audit">Audit</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button type="button" class="btn-remove-group" style="background: #dc3545; padding: 8px 12px;" onclick="removeGroup(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline" onclick="addGroup()" style="margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Ajouter un autre groupe
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-calendar-alt"></i> Planification des séances</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre de séances</label>
+                        <input type="number" id="nb_sessions" name="nb_sessions" value="10" min="1" max="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Date de début</label>
+                        <input type="date" id="start_date" name="start_date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Heure de début</label>
+                        <input type="time" id="start_time" name="start_time" value="08:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Heure de fin</label>
+                        <input type="time" id="end_time" name="end_time" value="10:00" required>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Créer la matière
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+let groupCount = 1;
+
+// Options des semestres par niveau
+const semestreOptions = {
+    'PMA': ['S1', 'S2'],
+    'M1': ['S3', 'S4'],
+    'M2': ['S5', 'S6']
+};
+
+function updateSemestreOptions(selectElement) {
+    const niveau = selectElement.value;
+    const semestreSelect = selectElement.closest('.group-item').querySelector('.semestre-select');
+    const groupeContainer = selectElement.closest('.group-item').querySelector('[id^="groupe-container"]');
+    const filiereContainer = selectElement.closest('.group-item').querySelector('[id^="filiere-container"]');
+    
+    semestreSelect.innerHTML = '<option value="">Sélectionnez</option>';
+    
+    if (niveau && semestreOptions[niveau]) {
+        semestreOptions[niveau].forEach(sem => {
+            const option = document.createElement('option');
+            option.value = sem;
+            option.textContent = sem;
+            semestreSelect.appendChild(option);
+        });
+        
+        semestreSelect.onchange = function() {
+            updateGroupAndFiliere(this, groupeContainer, filiereContainer);
+        };
+    }
+}
+
+function updateGroupAndFiliere(semestreSelect, groupeContainer, filiereContainer) {
+    const semestre = semestreSelect.value;
+    const niveau = semestreSelect.closest('.group-item').querySelector('.niveau-select').value;
+    
+    // Afficher/masquer groupe et filière selon le niveau et semestre
+    if (niveau === 'PMA') {
+        // PMA: toujours des groupes
+        groupeContainer.style.display = 'block';
+        filiereContainer.style.display = 'none';
+    } else if (niveau === 'M1' && semestre === 'S3') {
+        // M1 S3: groupes
+        groupeContainer.style.display = 'block';
+        filiereContainer.style.display = 'none';
+    } else if (niveau === 'M1' && semestre === 'S4') {
+        // M1 S4: filières
+        groupeContainer.style.display = 'none';
+        filiereContainer.style.display = 'block';
+    } else if (niveau === 'M2') {
+        // M2: filières
+        groupeContainer.style.display = 'none';
+        filiereContainer.style.display = 'block';
+    } else {
+        groupeContainer.style.display = 'none';
+        filiereContainer.style.display = 'none';
+    }
+}
+
+function addGroup() {
+    const container = document.getElementById('groups-container');
+    const newGroup = document.createElement('div');
+    newGroup.className = 'group-item';
+    newGroup.style.marginBottom = '15px';
+    newGroup.style.padding = '15px';
+    newGroup.style.background = '#f8f9fa';
+    newGroup.style.borderRadius = '10px';
+    
+    newGroup.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Niveau</label>
+                <select class="niveau-select" onchange="updateSemestreOptions(this)">
+                    <option value="">Sélectionnez</option>
+                    <option value="PMA">PMA</option>
+                    <option value="M1">M1</option>
+                    <option value="M2">M2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Semestre</label>
+                <select class="semestre-select">
+                    <option value="">Sélectionnez d'abord le niveau</option>
+                </select>
+            </div>
+            <div class="form-group" id="groupe-container-${groupCount}">
+                <label>Groupe (si applicable)</label>
+                <select class="groupe-select">
+                    <option value="none">Non applicable</option>
+                    <option value="G1">G1</option>
+                    <option value="G2">G2</option>
+                    <option value="G3">G3</option>
+                    <option value="G4">G4</option>
+                    <option value="G5">G5</option>
+                    <option value="G6">G6</option>
+                </select>
+            </div>
+            <div class="form-group" id="filiere-container-${groupCount}" style="display: none;">
+                <label>Filière</label>
+                <select class="filiere-select">
+                    <option value="none">Non applicable</option>
+                    <option value="Audit">Audit</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Marketing">Marketing</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn-remove-group" style="background: #dc3545; padding: 8px 12px;" onclick="removeGroup(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newGroup);
+    groupCount++;
+}
+
+function removeGroup(button) {
+    button.closest('.group-item').remove();
+}
+
+// Au submit, récupérer tous les groupes
+document.getElementById('createCourseForm').onsubmit = function(e) {
+    const groups = [];
+    document.querySelectorAll('.group-item').forEach(item => {
+        const niveau = item.querySelector('.niveau-select').value;
+        const semestre = item.querySelector('.semestre-select').value;
+        const groupe = item.querySelector('.groupe-select')?.value || 'none';
+        const filiere = item.querySelector('.filiere-select')?.value || 'none';
+        
+        if (niveau && semestre) {
+            groups.push(`${niveau}|${semestre}|${groupe}|${filiere}`);
+        }
+    });
+    
+    // Ajouter les groupes comme champ caché
+    groups.forEach(group => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'groups';
+        input.value = group;
+        this.appendChild(input);
+    });
+};
+
+// Date par défaut = aujourd'hui
+document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+</script>
+
+<style>
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-family: inherit;
+}
+
+.btn-remove-group {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #dc3545;
+    font-size: 1.2rem;
+}
+</style>
+{% endblock %}

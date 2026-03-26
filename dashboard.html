@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Tableau de bord Admin</h1>
+
+<div class="card">
+    <h3>Statistiques</h3>
+    <p>Étudiants: {{ stats.students }}</p>
+    <p>Professeurs: {{ stats.professors }}</p>
+    <p>Matières: {{ stats.courses }}</p>
+</div>
+{% endblock %}p

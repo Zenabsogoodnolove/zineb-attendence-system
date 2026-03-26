@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="form-container" style="max-width: 600px;">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-sliders-h"></i> Paramètres généraux</h3>
+            <p>Configurez les règles du système</p>
+        </div>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="absence_threshold">
+                    <i class="fas fa-exclamation-triangle"></i> Seuil d'absences maximal
+                </label>
+                <input type="number" id="absence_threshold" name="absence_threshold" 
+                       value="{{ settings.absence_threshold }}" min="1" max="10" required>
+                <small style="color: #666;">Nombre d'absences maximum avant notification</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="allowed_domains">
+                    <i class="fas fa-envelope"></i> Domaines email autorisés
+                </label>
+                <input type="text" id="allowed_domains" name="allowed_domains" 
+                       value="{{ settings.allowed_domains }}" required>
+                <small style="color: #666;">Séparez les domaines par des virgules (ex: groupeiscae.ma, iscae.ma)</small>
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

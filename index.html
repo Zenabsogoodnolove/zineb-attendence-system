@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-logo">
+            <img src="{{ url_for('static', filename='images/iscae logo.jpg') }}" 
+                 alt="ISCAE" 
+                 class="hero-logo-img">
+        </div>
+        <h1>Bienvenue sur la plateforme de <span>gestion des présences</span> de l'ISCAE</h1>
+        <p>Un système innovant pour un suivi en temps réel de votre assiduité</p>
+        
+        <div class="hero-buttons">
+            <a href="{{ url_for('login') }}" class="btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+            </a>
+            <a href="{{ url_for('register') }}" class="btn-secondary">
+                <i class="fas fa-user-plus"></i> S'inscrire
+            </a>
+        </div>
+    </div>
+    
+    <div class="hero-image">
+        <div class="qr-animation">
+            <div class="qr-box">
+                <i class="fas fa-qrcode"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Cards de rôles -->
+<section class="roles-section">
+    <div class="section-title">
+        <h2>Choisissez votre profil</h2>
+        <p>Accédez à vos fonctionnalités selon votre rôle</p>
+    </div>
+    
+    <div class="roles-grid">
+        <div class="role-card student-card">
+            <div class="card-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3>Étudiant</h3>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Scanner le QR code du professeur</li>
+                <li><i class="fas fa-check-circle"></i> Votre historique de présence</li>
+                <li><i class="fas fa-check-circle"></i> Alertes en cas d'absences</li>
+                <li><i class="fas fa-check-circle"></i> Suivi en temps réel</li>
+            </ul>
+            <a href="{{ url_for('register') }}?role=student" class="card-btn">Je suis étudiant</a>
+        </div>
+        
+        <div class="role-card professor-card">
+            <div class="card-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <h3>Professeur</h3>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Générer des QR codes sécurisés</li>
+                <li><i class="fas fa-check-circle"></i> Gérer vos matières</li>
+                <li><i class="fas fa-check-circle"></i> Visualiser les présences</li>
+                <li><i class="fas fa-check-circle"></i> Exporter les données</li>
+            </ul>
+            <a href="{{ url_for('register') }}?role=professor" class="card-btn">Je suis professeur</a>
+        </div>
+    </div>
+</section>
+
+<!-- Parcours pédagogique ISCAE -->
+<section class="parcours-section">
+    <div class="section-title">
+        <h2>Parcours pédagogique ISCAE</h2>
+        <p>Un cursus d'excellence adapté à chaque niveau</p>
+    </div>
+    
+    <div class="parcours-timeline">
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="timeline-content">
+                <h3>PMA - Cycle Préparatoire</h3>
+                <p><strong>S1 & S2</strong> : 6 groupes (G1 à G6)</p>
+                <p>Formation générale en management et économie</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-chart-simple"></i>
+            </div>
+            <div class="timeline-content">
+                <h3>M1 - Cycle Master 1</h3>
+                <p><strong>S3</strong> : 6 groupes (G1 à G6)</p>
+                <p><strong>S4</strong> : Choix de filière - Audit, Finance, Marketing</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="timeline-content">
+                <h3>M2 - Cycle Master 2</h3>
+                <p><strong>S5 & S6</strong> : Spécialisation par filière</p>
+                <p>Audit • Finance • Marketing</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

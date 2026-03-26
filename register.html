@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h3>Inscription</h3>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" name="first_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" name="last_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Rôle</label>
+                <select name="role" required>
+                    <option value="student">Étudiant</option>
+                    <option value="professor">Professeur</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="student-fields">
+                <label>Numéro étudiant</label>
+                <input type="text" name="student_id">
+                
+                <label>Niveau (PMA/M1/M2)</label>
+                <input type="text" name="niveau">
+                
+                <label>Semestre (S1/S2/S3/S4/S5/S6)</label>
+                <input type="text" name="semestre">
+                
+                <label>Groupe (G1/G2/G3/G4/G5/G6)</label>
+                <input type="text" name="groupe">
+                
+                <label>Filière (Marketing/Audit/Finance)</label>
+                <input type="text" name="filiere">
+            </div>
+            
+            <button type="submit" class="btn-submit">S'inscrire</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelector('select[name="role"]').addEventListener('change', function() {
+    var studentFields = document.getElementById('student-fields');
+    if (this.value === 'student') {
+        studentFields.style.display = 'block';
+    } else {
+        studentFields.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
