@@ -1,10 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import qrcode
 from io import BytesIO
 import base64
+import pandas as pd
 import os
 
 from models import db, User, Professor, Student, Course, Session, Attendance, Setting, CourseGroup
@@ -186,23 +187,24 @@ def create_session(course_id):
     if current_user.role != 'professor':
         return jsonify({'error': 'Non autorisé'}), 403
     
-    now = datetime.now()
-    end_time = (now + timedelta(hours=2)).time()
+    course = Course.query.get_or_404(course_id)
     
-    new_session = Session(
-        course_id=course_id,
-        date=now.date(),
-        start_time=now.time(),
-        end_time=end_time,
-        session_number=1
-    )
+    # Trouver la prochaine séance non active
+    next_session = Session.query.filter_by(course_id=course_id, is_active=False).order_by(Session.session_number).first()
     
-    secret = new_session.generate_qr_secret()
-    db.session.add(new_session)
+    if not next_session:
+        return jsonify({'error': 'Toutes les séances ont déjà été générées'}), 400
+    
+    # Activer la séance
+    next_session.is_active = True
+    secret = next_session.generate_qr_secret()
+    
     db.session.commit()
     
-    qr_data = url_for('scan_qr', session_id=new_session.id, secret=secret, _external=True)
+    # Générer l'URL pour le QR code
+    qr_data = url_for('scan_qr', session_id=next_session.id, secret=secret, _external=True)
     
+    # Générer l'image QR code
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(qr_data)
     qr.make(fit=True)
@@ -216,7 +218,9 @@ def create_session(course_id):
     return jsonify({
         'success': True,
         'qr_code': img_str,
-        'expiry': new_session.qr_expiry.isoformat()
+        'expiry': next_session.qr_expiry.isoformat(),
+        'session_id': next_session.id,
+        'session_number': next_session.session_number
     })
 
 @app.route('/scan/<int:session_id>/<secret>')
@@ -255,14 +259,68 @@ def student_dashboard():
         return redirect(url_for('index'))
     
     student = Student.query.filter_by(user_id=current_user.id).first()
-    courses = Course.query.filter_by(
-        filiere=student.filiere,
+    
+    if not student:
+        flash('Profil étudiant incomplet')
+        return redirect(url_for('logout'))
+    
+    # Récupérer TOUTES les matières qui correspondent à l'étudiant
+    # On cherche dans la table CourseGroup
+    courses = []
+    course_groups = CourseGroup.query.filter_by(
         niveau=student.niveau,
-        semestre=student.semestre,
-        groupe=student.groupe
+        semestre=student.semestre
     ).all()
     
-    return render_template('student/dashboard.html', courses=courses)
+    # Filtrer par groupe ou filière selon le cas
+    for cg in course_groups:
+        # Si l'étudiant a un groupe (PMA ou M1 S3)
+        if student.groupe and cg.groupe == student.groupe:
+            courses.append(cg.course)
+        # Si l'étudiant a une filière (M1 S4 ou M2)
+        elif student.filiere and cg.filiere == student.filiere:
+            courses.append(cg.course)
+        # Si la matière n'a ni groupe ni filière (cas général)
+        elif not cg.groupe and not cg.filiere:
+            courses.append(cg.course)
+    
+    # Supprimer les doublons
+    courses = list(set(courses))
+    
+    threshold = Setting.get_absence_threshold()
+    courses_data = []
+    
+    for course in courses:
+        # Compter les absences de l'étudiant dans cette matière
+        absences = Attendance.query.join(Session).filter(
+            Attendance.student_id == student.id,
+            Session.course_id == course.id,
+            Attendance.status == 'absent'
+        ).count()
+        
+        # Récupérer l'historique des séances
+        sessions = Session.query.filter_by(course_id=course.id).order_by(Session.date.desc()).limit(5).all()
+        recent_attendance = []
+        
+        for session in sessions:
+            attendance = Attendance.query.filter_by(
+                student_id=student.id,
+                session_id=session.id
+            ).first()
+            recent_attendance.append({
+                'date': session.date.strftime('%d/%m/%Y'),
+                'status': attendance.status if attendance else 'absent'
+            })
+        
+        courses_data.append({
+            'course': course,
+            'absences': absences,
+            'threshold': threshold,
+            'remaining': threshold - absences,
+            'recent_attendance': recent_attendance
+        })
+    
+    return render_template('student/dashboard.html', courses=courses_data)
 
 @app.route('/admin/dashboard')
 @login_required
@@ -277,6 +335,27 @@ def admin_dashboard():
     }
     
     return render_template('admin/dashboard.html', stats=stats)
+
+
+@app.route('/debug/sessions/<int:course_id>')
+@login_required
+def debug_sessions(course_id):
+    if current_user.role != 'professor':
+        return "Non autorisé"
+    
+    course = Course.query.get_or_404(course_id)
+    sessions = Session.query.filter_by(course_id=course_id).all()
+    
+    html = f"<h1>Séances de {course.name}</h1>"
+    html += f"<p>Total: {len(sessions)} séances</p>"
+    html += "<ul>"
+    for s in sessions:
+        html += f"<li>Séance {s.session_number}: {s.date} - Active: {s.is_active}</li>"
+    html += "</ul>"
+    html += "<a href='/professor/dashboard'>Retour</a>"
+    
+    return html    
+
 
 if __name__ == '__main__':
     with app.app_context():
